@@ -1,32 +1,19 @@
-import { ConfigModule } from "@nestjs/config";
+import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
-import { MicroserviceOptions, Transport } from "@nestjs/microservices";
+import helmet from "helmet";
 import { ApiGatewayModule } from "./api-gateway.module";
 
-ConfigModule.forRoot();
-
 async function bootstrap() {
-	const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-		ApiGatewayModule,
-		{
-			transport: Transport.RMQ,
-			options: {
-				urls: [
-					`amqp://${process.env.RABBITMQ_USER}:${process.env.RABBITMQ_PASS}@${process.env.RABBITMQ_HOST}:${process.env.RABBITMQ_PORT}`,
-				],
-				queue: process.env.RABBITMQ_QUEUE_NAME,
-				queueOptions: {
-					durable: true,
-				},
-				prefetchCount: parseInt(
-					process.env.RABBITMQ_PREFETCH_COUNT,
-					10,
-				),
-				noAck: false,
-			},
-		},
+	const app = await NestFactory.create(ApiGatewayModule);
+
+	app.useGlobalPipes(
+		new ValidationPipe({ transform: true, whitelist: true }),
 	);
 
-	await app.listen();
+	app.use(helmet());
+	app.enableCors();
+
+	await app.listen(process.env.PORT ?? 3000);
 }
+
 bootstrap();
