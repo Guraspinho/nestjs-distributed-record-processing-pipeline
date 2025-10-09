@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: optio-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP protocol port
+      - "15672:15672" # Management interface port
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_logs:/var/log/rabbitmq
+    environment:
+        - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+        - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - optio-network
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=development
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASS=${RABBITMQ_PASS}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_QUEUE_NAME=${RABBITMQ_QUEUE_NAME}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: pnpm run start:dev api-gateway
+    networks:
+      - optio-network
+
+networks:
+  optio-network:
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
+  rabbitmq_logs:
