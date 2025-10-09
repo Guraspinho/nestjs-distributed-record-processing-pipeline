@@ -19,5 +19,7 @@ COPY . .
 # Set working directory (optional since we're already in /app)
 WORKDIR /app
 
+EXPOSE 3000
+
 # Use a direct command to start the app to avoid Nest CLI issues
 CMD ["pnpm", "start:dev", "api-gateway"]
