@@ -1,17 +1,14 @@
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
+import { SwaggerModule } from "@nestjs/swagger";
 import helmet from "helmet";
 import { ApiGatewayModule } from "./api-gateway.module";
-import { SwaggerModule } from "@nestjs/swagger";
 import { swaggerConfig } from "./swagger/swagger";
 
 async function bootstrap() {
 	const app = await NestFactory.create(ApiGatewayModule);
 
-	const swaggerDocument = SwaggerModule.createDocument(
-		app,
-		swaggerConfig,
-	);
+	const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
 	SwaggerModule.setup("api-docs", app, swaggerDocument);
 
 	app.useGlobalPipes(
